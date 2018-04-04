@@ -1,5 +1,5 @@
 ---
-title: "Survival Rate of Titanic"
+title: "Survival Rate in Titanic"
 author: "William Lai"
 date: "4 April 2018"
 output: ioslides_presentation

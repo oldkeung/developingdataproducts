@@ -1,0 +1,83 @@
+---
+title: "Survival Rate in Titanic"
+author: "William Lai"
+date: "4 April 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, message = FALSE, warning = FALSE}
+library(dplyr)
+library(plotly)
+```
+
+```{r, warning = FALSE}
+df <- data.frame(Titanic)
+
+# Class
+classTemp <- df %>% group_by(Class, Survived) %>% summarize(Total = sum(Freq))
+classData <- data.frame(Class = unique(classTemp$Class), Survived = (classTemp %>% filter(Survived == "Yes") %>% mutate(Survived = Total))$Survived, NotSurvived = (classTemp %>% filter(Survived == "No") %>% mutate(NotSurvived = Total))$NotSurvived)
+
+# Sex
+sexTemp <- df %>% group_by(Sex, Survived) %>% summarize(Total = sum(Freq))
+sexData <- data.frame(Sex = unique(sexTemp$Sex), Survived = (sexTemp %>% filter(Survived == "Yes") %>% mutate(Survived = Total))$Survived, NotSurvived = (sexTemp %>% filter(Survived == "No") %>% mutate(NotSurvived = Total))$NotSurvived)
+
+# Age
+ageTemp <- df %>% group_by(Age, Survived) %>% summarize(Total = sum(Freq))
+ageData <- data.frame(Age = unique(ageTemp$Age), Survived = (ageTemp %>% filter(Survived == "Yes") %>% mutate(Survived = Total))$Survived, NotSurvived = (ageTemp %>% filter(Survived == "No") %>% mutate(NotSurvived = Total))$NotSurvived)
+
+data <- data.frame(Group = paste(classData$Class, "Class"), Type = "Class", Survived = classData$Survived, NotSurvived = classData$NotSurvived)
+
+data <- rbind(data, data.frame(Group = sexData$Sex, Type = "Sex", Survived = sexData$Survived, NotSurvived = sexData$NotSurvived))
+data <- rbind(data, data.frame(Group = ageData$Age, Type = "Age", Survived = ageData$Survived, NotSurvived = ageData$NotSurvived))
+
+data <- data.frame(data, PercentSurvived = data$Survived / (data$Survived + data$NotSurvived) * 100)
+```
+
+## Introduction
+
+From Wikipedia: (https://en.wikipedia.org/wiki/RMS_Titanic)
+
+*"RMS Titanic was a British passenger liner that sank in the North Atlantic Ocean in the early hours of 15 April 1912, after colliding with an iceberg during its maiden voyage from Southampton to New York City. There were an estimated 2,224 passengers and crew aboard, and more than 1,500 died, making it one of the deadliest commercial peacetime maritime disasters in modern history."*
+
+In R, the "Titanic" dataset contains the survival data of the incident. We could use that to see the survival rate due to different factors.
+
+## The Titanic Dataset
+
+The dataset contains the count of the following factors:
+
+- Class (`r unique(df$Class)`)
+- Sex (`r unique(df$Sex)`)
+- Age (`r unique(df$Age)`)
+- Survival (`r unique(df$Survived)`)
+
+Here is the sample data:
+
+```{r}
+head(df)
+```
+
+## Survial Rate in Titanic
+
+```{r}
+colors <- c('#4AC6B7', '#965F8A', '#C61951')
+
+plot_ly(
+    data = data, x = ~Survived, y = ~NotSurvived, 
+    hoverinfo = 'text', text = ~paste('<b>', Group, ' (', round(PercentSurvived, 2), "%)</b><br><br>Survived: ", Survived, "<br>Not Survived: ", NotSurvived, sep = ''),
+    type = 'scatter', mode = 'markers', 
+    marker = list(size = ~PercentSurvived, opacity = 0.5), color = ~Type, colors = colors) %>%
+    layout(title = 'Survival Rate in Titanic', xaxis = list(title = "Survived Count"), yaxis = list(title = "Not Survived Count"))
+
+```
+
+## Conclusion
+
+From the graph, we have the following observations:
+
+1. The 1st class passengers have the highest survival rate. It decreases with the class. The crew has the lowest survival rate
+2. The female survival rate is much higher than male
+3. The child survival rate is higher than adult
